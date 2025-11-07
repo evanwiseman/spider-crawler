@@ -1,5 +1,11 @@
 import unittest
-from crawl import normalize_url, get_h1_from_html, get_first_paragraph_from_html
+from crawl import (
+    normalize_url,
+    get_h1_from_html,
+    get_first_paragraph_from_html,
+    get_urls_from_html,
+    get_images_from_html,
+)
 
 
 class TestNormalizeURL(unittest.TestCase):
@@ -128,6 +134,116 @@ class TestGetFirstParagraphFromHTML(unittest.TestCase):
         actual = get_first_paragraph_from_html(input_body)
         expected = "low priority"
         self.assertEqual(actual, expected)
+
+
+class TestGetURLsFromHTML(unittest.TestCase):
+    def test_absolute(self):
+        input_url = "https://blog.boot.dev"
+        input_body = """
+            <html><body>
+                <a href="https://blog.boot.dev"><span>Boot.dev</span></a>
+            </body></html>
+            """
+        actual = get_urls_from_html(input_body, input_url)
+        expected = ["https://blog.boot.dev"]
+        self.assertEqual(actual, expected)
+
+    def test_relative(self):
+        input_url = "https://blog.boot.dev"
+        input_body = """
+            <html><boddy>
+                <a href="/about"><span>About</span></a>
+            </body></html>
+            """
+        actual = get_urls_from_html(input_body, input_url)
+        expected = ["https://blog.boot.dev/about"]
+        self.assertListEqual(actual, expected)
+
+    def test_multiple(self):
+        input_url = "https://blog.boot.dev"
+        input_body = """
+            <html><body>
+                <a href="https://blog.boot.dev"><span>Boot.dev</span></a>
+                <a href="/about"><span>About</span></a>
+            </body></html>
+            """
+        actual = get_urls_from_html(input_body, input_url)
+        expected = ["https://blog.boot.dev", "https://blog.boot.dev/about"]
+        self.assertListEqual(actual, expected)
+
+    def test_missing(self):
+        input_url = "https://blog.boot.dev"
+        input_body = "<html><body></body></html>"
+        actual = get_urls_from_html(input_body, input_url)
+        expected = []
+        self.assertListEqual(actual, expected)
+
+    def test_missing_href(self):
+        input_url = "https://blog.boot.dev"
+        input_body = """
+            <html><boddy>
+                <a><span>About</span></a>
+            </body></html>
+            """
+        actual = get_urls_from_html(input_body, input_url)
+        expected = []
+        self.assertListEqual(actual, expected)
+
+
+class TestGetImagesFromHTML(unittest.TestCase):
+    def test_absolute(self):
+        input_url = "https://blog.boot.dev"
+        input_body = """
+            <html><body>
+                <img src="https://blog.boot.dev/logo.png" alt="Logo">
+            </body></html>"""
+        actual = get_images_from_html(input_body, input_url)
+        expected = ["https://blog.boot.dev/logo.png"]
+        self.assertListEqual(actual, expected)
+
+    def test_relative(self):
+        input_url = "https://blog.boot.dev"
+        input_body = """
+            <html><body>
+                <img src="/logo.png" alt="Logo">
+            </body></html>
+            """
+        actual = get_images_from_html(input_body, input_url)
+        expected = ["https://blog.boot.dev/logo.png"]
+        self.assertListEqual(actual, expected)
+
+    def test_multiple(self):
+        input_url = "https://blog.boot.dev"
+        input_body = """
+            <html><body>
+                <img src="https://blog.boot.dev/logo.png" alt="Logo">
+                <img src="/logo.png" alt="Logo">
+            </body></html>
+            """
+        actual = get_images_from_html(input_body, input_url)
+        expected = ["https://blog.boot.dev/logo.png", "https://blog.boot.dev/logo.png"]
+        self.assertListEqual(actual, expected)
+
+    def test_missing(self):
+        input_url = "https://blog.boot.dev"
+        input_body = """
+            <html><body>
+            </body></html>
+            """
+        actual = get_images_from_html(input_body, input_url)
+        expected = []
+        self.assertListEqual(actual, expected)
+
+    def test_missing_src(self):
+        input_url = "https://blog.boot.dev"
+        input_body = """
+            <html><body>
+                <img alt="Logo">
+            </body></html>
+            """
+        actual = get_images_from_html(input_body, input_url)
+        expected = []
+        self.assertListEqual(actual, expected)
 
 
 if __name__ == "__main__":

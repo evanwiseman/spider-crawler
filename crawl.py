@@ -1,5 +1,6 @@
 from bs4 import BeautifulSoup
 from urllib import parse
+from typing import List
 
 
 def normalize_url(url: str) -> str:
@@ -28,3 +29,31 @@ def get_first_paragraph_from_html(html: str) -> str:
     # low priority outside of main
     p = soup.find(name="p")
     return p.get_text() if p else ""
+
+
+def get_urls_from_html(html: str, base_url: str) -> List[str]:
+    soup = BeautifulSoup(html, "html.parser")
+    a_list = soup.find_all(name="a")
+
+    urls = []
+    for a in a_list:
+        href = a.get("href")
+        if not href:
+            continue
+        urls.append(parse.urljoin(base_url, href))
+
+    return urls
+
+
+def get_images_from_html(html: str, base_url: str) -> List[str]:
+    soup = BeautifulSoup(html, "html.parser")
+    img_list = soup.find_all(name="img")
+
+    urls = []
+    for img in img_list:
+        src = img.get("src")
+        if not src:
+            continue
+        urls.append(parse.urljoin(base_url, src))
+
+    return urls
