@@ -5,6 +5,7 @@ from crawl import (
     get_first_paragraph_from_html,
     get_urls_from_html,
     get_images_from_html,
+    extract_page_data,
 )
 
 
@@ -244,6 +245,164 @@ class TestGetImagesFromHTML(unittest.TestCase):
         actual = get_images_from_html(input_body, input_url)
         expected = []
         self.assertListEqual(actual, expected)
+
+
+class TestExtractPageData(unittest.TestCase):
+    def test_basic(self):
+        input_url = "https://blog.boot.dev"
+        input_body = """
+            <html><body>
+                <h1>Test Title</h1>
+                <p>This is the first paragraph.</p>
+                <a href="/link1">Link 1</a>
+                <img src="/image1.jpg" alt="Image 1">
+            </body></html>
+        """
+        actual = extract_page_data(input_body, input_url)
+        expected = {
+            "url": "https://blog.boot.dev",
+            "h1": "Test Title",
+            "first_paragraph": "This is the first paragraph.",
+            "outgoing_links": ["https://blog.boot.dev/link1"],
+            "image_urls": ["https://blog.boot.dev/image1.jpg"],
+        }
+        self.assertDictEqual(actual, expected)
+
+    def test_missing(self):
+        input_url = "https://blog.boot.dev"
+        input_body = """
+            <html><body>
+            </body></html>
+            """
+        actual = extract_page_data(input_body, input_url)
+        expected = {
+            "url": "https://blog.boot.dev",
+            "h1": "",
+            "first_paragraph": "",
+            "outgoing_links": [],
+            "image_urls": [],
+        }
+        self.assertDictEqual(actual, expected)
+
+    def test_multiple_headers(self):
+        input_url = "https://blog.boot.dev"
+        input_body = """
+            <html><body>
+                <h1>Test Title 1</h1>
+                <h1>Test Title 2</h1>
+                <p>This is the first paragraph.</p>
+                <a href="/link1">Link 1</a>
+                <img src="/image1.jpg" alt="Image 1">
+            </body></html>
+        """
+        actual = extract_page_data(input_body, input_url)
+        expected = {
+            "url": "https://blog.boot.dev",
+            "h1": "Test Title 1",
+            "first_paragraph": "This is the first paragraph.",
+            "outgoing_links": ["https://blog.boot.dev/link1"],
+            "image_urls": ["https://blog.boot.dev/image1.jpg"],
+        }
+        self.assertDictEqual(actual, expected)
+
+    def test_multiple_paragraph(self):
+        input_url = "https://blog.boot.dev"
+        input_body = """
+            <html><body>
+                <h1>Test Title</h1>
+                <p>This is the first paragraph.</p>
+                <p>This is the second paragraph.</p>
+                <a href="/link1">Link 1</a>
+                <img src="/image1.jpg" alt="Image 1">
+            </body></html>
+        """
+        actual = extract_page_data(input_body, input_url)
+        expected = {
+            "url": "https://blog.boot.dev",
+            "h1": "Test Title",
+            "first_paragraph": "This is the first paragraph.",
+            "outgoing_links": ["https://blog.boot.dev/link1"],
+            "image_urls": ["https://blog.boot.dev/image1.jpg"],
+        }
+        self.assertDictEqual(actual, expected)
+
+    def test_multiple_links(self):
+        input_url = "https://blog.boot.dev"
+        input_body = """
+            <html><body>
+                <h1>Test Title</h1>
+                <p>This is the first paragraph.</p>
+                <a href="/link1">Link 1</a>
+                <a href="/link2">Link 2</a>
+                <img src="/image1.jpg" alt="Image 1">
+            </body></html>
+        """
+        actual = extract_page_data(input_body, input_url)
+        expected = {
+            "url": "https://blog.boot.dev",
+            "h1": "Test Title",
+            "first_paragraph": "This is the first paragraph.",
+            "outgoing_links": [
+                "https://blog.boot.dev/link1",
+                "https://blog.boot.dev/link2",
+            ],
+            "image_urls": ["https://blog.boot.dev/image1.jpg"],
+        }
+        self.assertDictEqual(actual, expected)
+
+    def test_multiple_images(self):
+        input_url = "https://blog.boot.dev"
+        input_body = """
+            <html><body>
+                <h1>Test Title</h1>
+                <p>This is the first paragraph.</p>
+                <a href="/link1">Link 1</a>
+                <img src="/image1.jpg" alt="Image 1">
+                <img src="/image2.jpg" alt="Image 2">
+            </body></html>
+        """
+        actual = extract_page_data(input_body, input_url)
+        expected = {
+            "url": "https://blog.boot.dev",
+            "h1": "Test Title",
+            "first_paragraph": "This is the first paragraph.",
+            "outgoing_links": ["https://blog.boot.dev/link1"],
+            "image_urls": [
+                "https://blog.boot.dev/image1.jpg",
+                "https://blog.boot.dev/image2.jpg",
+            ],
+        }
+        self.assertDictEqual(actual, expected)
+
+    def test_multiple_all(self):
+        input_url = "https://blog.boot.dev"
+        input_body = """
+            <html><body>
+                <h1>Test Title 1</h1>
+                <h1>Test Title 2</h1>
+                <p>This is the first paragraph.</p>
+                <p>This is the second paragraph.</p>
+                <a href="/link1">Link 1</a>
+                <a href="/link2">Link 2</a>
+                <img src="/image1.jpg" alt="Image 1">
+                <img src="/image2.jpg" alt="Image 2">
+            </body></html>
+        """
+        actual = extract_page_data(input_body, input_url)
+        expected = {
+            "url": "https://blog.boot.dev",
+            "h1": "Test Title 1",
+            "first_paragraph": "This is the first paragraph.",
+            "outgoing_links": [
+                "https://blog.boot.dev/link1",
+                "https://blog.boot.dev/link2",
+            ],
+            "image_urls": [
+                "https://blog.boot.dev/image1.jpg",
+                "https://blog.boot.dev/image2.jpg",
+            ],
+        }
+        self.assertDictEqual(actual, expected)
 
 
 if __name__ == "__main__":

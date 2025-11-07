@@ -57,3 +57,13 @@ def get_images_from_html(html: str, base_url: str) -> List[str]:
         urls.append(parse.urljoin(base_url, src))
 
     return urls
+
+
+def extract_page_data(html: str, page_url: str) -> dict:
+    data = {}
+    data["url"] = page_url
+    data["h1"] = get_h1_from_html(html)
+    data["first_paragraph"] = get_first_paragraph_from_html(html)
+    data["outgoing_links"] = get_urls_from_html(html, page_url)
+    data["image_urls"] = get_images_from_html(html, page_url)
+    return data
