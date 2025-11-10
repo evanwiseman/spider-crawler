@@ -24,6 +24,7 @@ async def main():
     print(f"starting crawl of: {url}")
 
     page_data = await crawl_site_async(url, max_concurrency, max_pages)
+    successful_visits = 0
     for normalized_url, data in page_data.items():
         # invalid entry
         if not isinstance(data, dict):
@@ -49,7 +50,9 @@ async def main():
                 )
                 print(f"\t{k}: {text}")
 
-    print(f"complete crawing {url} successfully on {len(page_data)} pages.")
+        successful_visits += 1
+
+    print(f"complete crawing {url} ({successful_visits}/{len(page_data)}) pages.")
 
 
 if __name__ == "__main__":

@@ -167,10 +167,6 @@ class AsyncCrawler:
             if len(self.page_data) >= self.max_pages:
                 print("reached maximum number of pages to crawl.")
                 self.should_stop = True
-
-                # cancel all tasks
-                for task in self.all_tasks:
-                    task.cancel()
                 return False
 
             # reserve slot
