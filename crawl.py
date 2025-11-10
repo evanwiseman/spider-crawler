@@ -143,7 +143,6 @@ class AsyncCrawler:
         self.session: aiohttp.ClientSession | None = None
         self.max_pages = max_pages
         self.should_stop = False
-        self.all_tasks: set[asyncio.Task[str]] = set()
 
     async def __aenter__(self):
         self.session = aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=15))
@@ -188,9 +187,6 @@ class AsyncCrawler:
             return await res.text()
 
     async def crawl_page(self, current_url: str) -> str:
-        if self.should_stop:
-            return
-
         # check base and current domain match (skip)
         if not is_same_domain(self.base_url, current_url):
             return
@@ -212,15 +208,10 @@ class AsyncCrawler:
 
             # start and wait for tasks to crawl to new pages
             tasks = []
-            try:
-                for url in data["outgoing_links"]:
-                    task = asyncio.create_task(self.crawl_page(url))
-                    tasks.append(task)
-                    self.all_tasks.add(task)
-                await asyncio.gather(*tasks, return_exceptions=True)
-            finally:
-                for task in tasks:
-                    self.all_tasks.discard(task)
+            for url in data["outgoing_links"]:
+                task = asyncio.create_task(self.crawl_page(url))
+                tasks.append(task)
+            await asyncio.gather(*tasks, return_exceptions=True)
         except asyncio.CancelledError:
             print(f"cancelled crawling {current_url}")
             raise
