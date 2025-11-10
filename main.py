@@ -1,7 +1,7 @@
 import asyncio
 import sys
-import textwrap
 from crawl import crawl_site_async
+from csv_report import write_csv_report
 
 
 async def main():
@@ -30,29 +30,36 @@ async def main():
         if not isinstance(data, dict):
             continue
 
-        print(normalized_url)
-        for k, v in data.items():
-            if isinstance(v, list):
-                print(f"\t{k}: [")
-                for item in v:
-                    text = textwrap.fill(
-                        str(item),
-                        initial_indent="\t\t",
-                        subsequent_indent="\t\t",
-                    )
-                    print(text)
-                print("\t]")
-            else:
-                text = textwrap.fill(
-                    str(v),
-                    initial_indent="",
-                    subsequent_indent="\t\t",
-                )
-                print(f"\t{k}: {text}")
+        # print(normalized_url)
+        # for k, v in data.items():
+        #     if isinstance(v, list):
+        #         print(f"\t{k}: [")
+        #         for item in v:
+        #             text = textwrap.fill(
+        #                 str(item),
+        #                 initial_indent="\t\t",
+        #                 subsequent_indent="\t\t",
+        #             )
+        #             print(text)
+        #         print("\t]")
+        #     else:
+        #         text = textwrap.fill(
+        #             str(v),
+        #             initial_indent="",
+        #             subsequent_indent="\t\t",
+        #         )
+        #         print(f"\t{k}: {text}")
 
         successful_visits += 1
 
     print(f"complete crawing {url} ({successful_visits}/{len(page_data)}) pages.")
+    filename = "report.csv"
+    print(f"writing report to {filename}...")
+    try:
+        write_csv_report(page_data, filename)
+        print("finished writing report.")
+    except Exception as e:
+        print(f"failed to write report: {str(e)}")
 
 
 if __name__ == "__main__":

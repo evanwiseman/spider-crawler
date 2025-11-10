@@ -81,7 +81,7 @@ def extract_page_data(html: str, page_url: str) -> dict:
     data["url"] = page_url
     data["h1"] = get_h1_from_html(html)
     data["first_paragraph"] = get_first_paragraph_from_html(html)
-    data["outgoing_links"] = get_urls_from_html(html, page_url)
+    data["outgoing_link_urls"] = get_urls_from_html(html, page_url)
     data["image_urls"] = get_images_from_html(html, page_url)
     return data
 
@@ -208,7 +208,7 @@ class AsyncCrawler:
 
             # start and wait for tasks to crawl to new pages
             tasks = []
-            for url in data["outgoing_links"]:
+            for url in data["outgoing_link_urls"]:
                 task = asyncio.create_task(self.crawl_page(url))
                 tasks.append(task)
             await asyncio.gather(*tasks, return_exceptions=True)
